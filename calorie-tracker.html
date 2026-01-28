@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Calorie Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f7;
+            min-height: 100vh;
+            padding: 0;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        h1 {
+            color: #1d1d1f;
+            text-align: center;
+            margin: 24px 0 8px;
+            font-size: 2em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .date-display {
+            text-align: center;
+            color: #86868b;
+            font-size: 0.95em;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .history-section {
+            margin-top: 16px;
+        }
+
+        .history-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .history-date {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #1d1d1f;
+            flex: 1;
+            text-align: center;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #0051d5;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .nav-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .nav-btn:disabled {
+            background: #e5e5ea;
+            color: #86868b;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .history-summary {
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.2);
+        }
+
+        .history-summary h3 {
+            margin-bottom: 16px;
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .history-stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .history-stat-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .history-stat-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .history-foods {
+            max-height: 400px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: #86868b;
+            padding: 60px 20px;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .date-picker-group {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            margin-bottom: 16px;
+        }
+
+        .date-picker-group input[type="date"] {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .history-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            color: #1d1d1f;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            color: #1d1d1f;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            letter-spacing: -0.2px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d2d2d7;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: -0.2px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: white;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0051d5;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #8e8e93;
+            color: white;
+            margin-right: 8px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #636366;
+        }
+
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+            padding: 8px 14px;
+            font-size: 0.85em;
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.2);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #d70015;
+        }
+
+        .btn-success {
+            background: #34c759;
+            color: white;
+            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #248a3d;
+        }
+
+        .btn-info {
+            background: #007aff;
+            color: white;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+        }
+
+        .btn-info:hover:not(:disabled) {
+            background: #0051d5;
+        }
+
+        .daily-summary {
+            background: linear-gradient(135deg, #ff2d55 0%, #ff6482 100%);
+            border-radius: 16px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(255, 45, 85, 0.2);
+        }
+
+        .daily-summary h3 {
+            font-size: 1.2em;
+            margin-bottom: 16px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-item .label {
+            font-size: 0.8em;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .summary-item .value {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-top: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .food-log {
+            max-height: 500px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .food-entry {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .food-entry:hover {
+            background: white;
+            border-color: #e5e5ea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .food-entry:active {
+            transform: scale(0.98);
+        }
+
+        .food-info {
+            flex: 1;
+        }
+
+        .food-name {
+            font-weight: 600;
+            font-size: 1em;
+            color: #1d1d1f;
+            margin-bottom: 4px;
+            letter-spacing: -0.2px;
+        }
+
+        .food-macros {
+            font-size: 0.85em;
+            color: #86868b;
+            font-weight: 500;
+        }
+
+        .food-calories {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #007aff;
+            margin-right: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .saved-foods {
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .saved-food-item {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #f0f0f0;
+        }
+
+        .saved-food-item:hover {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+            box-shadow: 0 2px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .saved-food-item:active {
+            transform: scale(0.98);
+        }
+
+        .saved-food-item:hover .food-macros {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #86868b;
+            padding: 40px 20px;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: #f0f0f0;
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            color: #1d1d1f;
+        }
+
+        .tab.active {
+            background: white;
+            color: #007aff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .reset-day {
+            background: #ff3b30;
+            color: white;
+            width: 100%;
+            margin-top: 12px;
+            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+        }
+
+        .reset-day:hover:not(:disabled) {
+            background: #d70015;
+        }
+
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 12px;
+            border: 1px solid #e5e5ea;
+            border-radius: 12px;
+            padding: 8px;
+            background: #fafafa;
+        }
+
+        .search-result-item {
+            padding: 14px;
+            margin-bottom: 6px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .search-result-item:hover {
+            border-color: #007aff;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+        }
+
+        .search-result-item:active {
+            transform: scale(0.98);
+        }
+
+        .search-result-name {
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 4px;
+            font-size: 0.95em;
+            letter-spacing: -0.2px;
+        }
+
+        .search-result-info {
+            font-size: 0.8em;
+            color: #86868b;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #007aff;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 12px;
+            border: 1px solid #ffcdd2;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 12px;
+            border: 1px solid #bbdefb;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .serving-size-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 8px;
+        }
+
+        .api-config {
+            background: #fff9e6;
+            border: 1px solid #ffe082;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .api-config h3 {
+            color: #f57c00;
+            margin-bottom: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .api-config input {
+            margin-bottom: 8px;
+        }
+
+        .api-config small {
+            color: #f57c00;
+            display: block;
+            margin-top: 6px;
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #af52bf 0%, #ff2d55 100%);
+            color: white;
+            width: 100%;
+            margin-top: 12px;
+            box-shadow: 0 2px 8px rgba(175, 82, 191, 0.3);
+        }
+
+        .btn-ai:hover:not(:disabled) {
+            background: linear-gradient(135deg, #8e2de2 0%, #d70015 100%);
+            box-shadow: 0 4px 12px rgba(175, 82, 191, 0.4);
+        }
+
+        .ai-result {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .ai-result h4 {
+            color: #1565c0;
+            margin-bottom: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            body {
+                padding-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 1.6em;
+                margin: 16px 0 6px;
+            }
+
+            .date-display {
+                font-size: 0.85em;
+                margin-bottom: 16px;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .card h2 {
+                font-size: 1.2em;
+                margin-bottom: 16px;
+            }
+
+            .history-navigation {
+                gap: 8px;
+            }
+
+            .history-date {
+                font-size: 0.95em;
+            }
+
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+
+            .history-stats {
+                gap: 10px;
+            }
+
+            .history-stat {
+                padding: 10px;
+            }
+
+            .history-stat-value {
+                font-size: 1.4em;
+            }
+
+            .summary-grid {
+                gap: 10px;
+            }
+
+            .summary-item .value {
+                font-size: 1.6em;
+            }
+
+            .tabs {
+                gap: 6px;
+            }
+
+            .tab {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 Daily Calorie Tracker</h1>
+        <div class="date-display" id="dateDisplay"></div>
+
+        <!-- API Configuration -->
+        <div class="card api-config" id="apiConfigCard">
+            <h3 onclick="toggleApiConfig()" style="cursor: pointer; user-select: none;">
+                🤖 AI Backup Configuration (Optional) <span id="apiConfigToggle">▼</span>
+            </h3>
+            <div id="apiConfigContent">
+                <div class="input-group">
+                    <label for="googleApiKey">Google AI Studio API Key</label>
+                    <input type="password" id="googleApiKey" placeholder="Enter your API key (optional)">
+                    <small>Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>. This enables AI-powered food lookups as a backup option.</small>
+                </div>
+                <button class="btn btn-success" onclick="saveApiKey()">Save API Key</button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column: Add Food -->
+            <div class="card">
+                <h2>Add Food</h2>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('lookup')">🔍 Food Lookup</button>
+                    <button class="tab" onclick="switchTab('manual')">✏️ Manual Entry</button>
+                    <button class="tab" onclick="switchTab('saved')">💾 Saved Foods</button>
+                </div>
+
+                <!-- Food Lookup Tab -->
+                <div id="lookupTab" class="tab-content active">
+                    <div class="input-group">
+                        <label for="searchFood">Search for Food</label>
+                        <input type="text" id="searchFood" placeholder="e.g., chicken breast, apple, rice">
+                    </div>
+
+                    <button class="btn btn-info" onclick="searchFood()" id="searchBtn">Search</button>
+
+                    <div id="searchResults"></div>
+                    
+                    <button class="btn btn-ai" onclick="showAIInput()" id="aiSearchBtn" style="display: none;">
+                        🤖 Not satisfied? Try AI Lookup
+                    </button>
+
+                    <div id="aiInputSection" style="display: none; margin-top: 15px;">
+                        <div class="info-box">
+                            <strong>AI Food Lookup</strong>
+                            <p style="margin-top: 8px;">Be as specific as possible for best results. Include:</p>
+                            <ul style="margin: 8px 0 8px 20px;">
+                                <li>Exact amount in grams (e.g., "150g")</li>
+                                <li>Cooking method (e.g., "grilled", "baked", "raw")</li>
+                                <li>Any additional details (e.g., "with skin", "boneless")</li>
+                            </ul>
+                        </div>
+                        <div class="input-group" style="margin-top: 15px;">
+                            <label for="aiSearchInput">Detailed Food Description</label>
+                            <input type="text" id="aiSearchInput" placeholder="e.g., 150g grilled chicken breast, boneless, skinless">
+                        </div>
+                        <button class="btn btn-primary" onclick="searchFoodWithAI()" id="aiSubmitBtn">Get AI Analysis</button>
+                        <button class="btn btn-secondary" onclick="hideAIInput()">Cancel</button>
+                    </div>
+
+                    <div id="selectedFoodDetails" style="display: none;">
+                        <div class="info-box" style="margin-top: 20px;">
+                            <strong>Selected:</strong> <span id="selectedFoodName"></span>
+                        </div>
+                        
+                        <div class="input-group" style="margin-top: 15px;">
+                            <label for="servingSize">Amount (grams)</label>
+                            <input type="number" id="servingSize" placeholder="100" min="1" step="1" value="100">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Nutritional Information (per <span id="servingSizeDisplay">100</span>g)</label>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;"><strong>Calories:</strong> <span id="lookupCalories">0</span> cal</div>
+                                <div style="margin-bottom: 8px;"><strong>Carbs:</strong> <span id="lookupCarbs">0</span>g</div>
+                                <div style="margin-bottom: 8px;"><strong>Protein:</strong> <span id="lookupProtein">0</span>g</div>
+                                <div><strong>Fats:</strong> <span id="lookupFats">0</span>g</div>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-primary" onclick="addLookedUpFood()">Add to Today</button>
+                        </div>
+                        <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="saveLookedUpFood()">Save to Database</button>
+                    </div>
+                </div>
+
+                <!-- Manual Entry Tab -->
+                <div id="manualTab" class="tab-content">
+                    <div class="input-group">
+                        <label for="foodName">Food Name</label>
+                        <input type="text" id="foodName" placeholder="e.g., Chicken Breast">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="carbs">Carbohydrates (g)</label>
+                        <input type="number" id="carbs" placeholder="0" min="0" step="0.1" value="0">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="protein">Protein (g)</label>
+                        <input type="number" id="protein" placeholder="0" min="0" step="0.1" value="0">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fats">Fats (g)</label>
+                        <input type="number" id="fats" placeholder="0" min="0" step="0.1" value="0">
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="addFoodToLog()">Add to Today</button>
+                    </div>
+                    <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="saveFoodToDatabase()">Save to Database</button>
+                </div>
+
+                <!-- Saved Foods Tab -->
+                <div id="savedTab" class="tab-content">
+                    <div class="saved-foods" id="savedFoodsList">
+                        <div class="empty-state">No saved foods yet. Add foods and save them to your database!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Daily Log & Summary -->
+            <div class="card">
+                <h2>Today's Log</h2>
+                
+                <div class="daily-summary">
+                    <h3>Daily Totals</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="label">Total Calories</div>
+                            <div class="value" id="totalCalories">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="label">Carbs</div>
+                            <div class="value" id="totalCarbs">0g</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="label">Protein</div>
+                            <div class="value" id="totalProtein">0g</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="label">Fats</div>
+                            <div class="value" id="totalFats">0g</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="food-log" id="foodLog">
+                    <div class="empty-state">No foods logged today. Start adding foods!</div>
+                </div>
+
+                <button class="btn reset-day" onclick="resetDay()">Reset Today's Log</button>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="card history-section">
+            <h2>📅 History</h2>
+            
+            <div class="date-picker-group">
+                <input type="date" id="historyDatePicker" onchange="loadHistoryByDate()">
+                <button class="btn btn-primary" onclick="loadHistoryByDate()">Go to Date</button>
+            </div>
+
+            <div class="history-navigation">
+                <button class="nav-btn" onclick="navigateHistory(-1)" id="prevDayBtn">← Previous Day</button>
+                <div class="history-date" id="historyDate">Select a date</div>
+                <button class="nav-btn" onclick="navigateHistory(1)" id="nextDayBtn">Next Day →</button>
+            </div>
+
+            <div id="historyContent">
+                <div class="history-empty">
+                    Select a date to view your food history
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const CARB_CALORIES_PER_GRAM = 4;
+        const PROTEIN_CALORIES_PER_GRAM = 4;
+        const FAT_CALORIES_PER_GRAM = 9;
+
+        // Data structures
+        let dailyLog = [];
+        let savedFoods = [];
+        let foodHistory = {}; // Store historical data: { 'YYYY-MM-DD': [...foods] }
+        let currentHistoryDate = null;
+        let selectedFood = null;
+        let googleApiKey = '';
+
+        // Initialize app
+        function init() {
+            loadFromLocalStorage();
+            loadApiKey();
+            updateDateDisplay();
+            updateDailySummary();
+            renderFoodLog();
+            renderSavedFoods();
+            
+            // Add event listener for serving size changes
+            document.getElementById('servingSize').addEventListener('input', updateServingSizeDisplay);
+        }
+
+        // Toggle API config visibility
+        function toggleApiConfig() {
+            const content = document.getElementById('apiConfigContent');
+            const toggle = document.getElementById('apiConfigToggle');
+            const isCollapsed = content.style.display === 'none';
+            
+            if (isCollapsed) {
+                content.style.display = 'block';
+                toggle.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '▶';
+            }
+        }
+
+        // Save API key to localStorage
+        function saveApiKey() {
+            const apiKey = document.getElementById('googleApiKey').value.trim();
+            if (apiKey) {
+                localStorage.setItem('googleApiKey', apiKey);
+                googleApiKey = apiKey;
+                alert('API key saved successfully!');
+                // Minimize the config section after saving
+                document.getElementById('apiConfigContent').style.display = 'none';
+                document.getElementById('apiConfigToggle').textContent = '▶';
+            } else {
+                localStorage.removeItem('googleApiKey');
+                googleApiKey = '';
+                alert('API key removed.');
+            }
+        }
+
+        // Load API key from localStorage
+        function loadApiKey() {
+            const storedKey = localStorage.getItem('googleApiKey');
+            if (storedKey) {
+                googleApiKey = storedKey;
+                document.getElementById('googleApiKey').value = storedKey;
+                // If API key exists, start with config minimized
+                document.getElementById('apiConfigContent').style.display = 'none';
+                document.getElementById('apiConfigToggle').textContent = '▶';
+            }
+        }
+
+        // Display current date
+        function updateDateDisplay() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if (tabName === 'lookup') {
+                document.getElementById('lookupTab').classList.add('active');
+            } else if (tabName === 'manual') {
+                document.getElementById('manualTab').classList.add('active');
+            } else {
+                document.getElementById('savedTab').classList.add('active');
+            }
+        }
+
+        // Search for food using USDA API
+        async function searchFood() {
+            const searchTerm = document.getElementById('searchFood').value.trim();
+            const resultsDiv = document.getElementById('searchResults');
+            const searchBtn = document.getElementById('searchBtn');
+
+            if (!searchTerm) {
+                alert('Please enter a food name to search');
+                return;
+            }
+
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            resultsDiv.innerHTML = '<div class="loading">🔍 Searching for foods...</div>';
+
+            try {
+                // Using USDA FoodData Central API
+                const response = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(searchTerm)}&pageSize=10&api_key=uAToHmb8JVojh6g2yHsEBBDk42hsAmox7D7xhE9d`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch food data');
+                }
+
+                const data = await response.json();
+
+                if (data.foods && data.foods.length > 0) {
+                    displaySearchResults(data.foods);
+                    // Show AI button if API key is configured
+                    const aiBtn = document.getElementById('aiSearchBtn');
+                    if (googleApiKey && aiBtn) {
+                        aiBtn.style.display = 'block';
+                    }
+                } else {
+                    resultsDiv.innerHTML = '<div class="empty-state">No foods found. Try a different search term.</div>';
+                    // Show AI button if API key is configured
+                    const aiBtn = document.getElementById('aiSearchBtn');
+                    if (googleApiKey && aiBtn) {
+                        aiBtn.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error searching food:', error);
+                resultsDiv.innerHTML = '<div class="error-message">⚠️ Error searching for foods. Please try again or use manual entry.</div>';
+                // Show AI button if API key is configured
+                const aiBtn = document.getElementById('aiSearchBtn');
+                if (googleApiKey && aiBtn) {
+                    aiBtn.style.display = 'block';
+                }
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        // Show AI input section
+        function showAIInput() {
+            if (!googleApiKey) {
+                alert('Please configure your Google AI Studio API key first in the configuration section above.');
+                return;
+            }
+            
+            document.getElementById('aiInputSection').style.display = 'block';
+            document.getElementById('aiSearchBtn').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('aiSearchInput').focus();
+        }
+
+        // Hide AI input section
+        function hideAIInput() {
+            document.getElementById('aiInputSection').style.display = 'none';
+            document.getElementById('aiSearchBtn').style.display = 'block';
+            document.getElementById('searchResults').style.display = 'block';
+        }
+
+        // Search for food using Google AI Studio
+        async function searchFoodWithAI() {
+            const searchTerm = document.getElementById('aiSearchInput').value.trim();
+            const resultsDiv = document.getElementById('searchResults');
+            const aiSubmitBtn = document.getElementById('aiSubmitBtn');
+
+            if (!searchTerm) {
+                alert('Please enter a detailed food description');
+                return;
+            }
+
+            if (!googleApiKey) {
+                alert('Please configure your Google AI Studio API key first');
+                return;
+            }
+
+            // Show loading state
+            aiSubmitBtn.disabled = true;
+            aiSubmitBtn.textContent = '🤖 AI is thinking...';
+            document.getElementById('aiInputSection').style.display = 'none';
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">🤖 Using AI to analyze food...</div>';
+
+            try {
+                const prompt = `You are a nutrition expert. Provide detailed nutritional information for "${searchTerm}".
+
+Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just the JSON):
+{
+  "name": "food name",
+  "calories": number,
+  "carbs": number,
+  "protein": number,
+  "fats": number,
+  "confidence": "high/medium/low",
+  "notes": "any relevant notes about the food"
+}
+
+Use standard USDA values when available. If the food is ambiguous, use the most common interpretation.`;
+
+                // Use gemini-2.5-flash directly
+                const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+                
+                const response = await fetch(`${endpoint}?key=${googleApiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(`API Error: ${errorData.error?.message || 'Failed to get AI response'}`);
+                }
+
+                const data = await response.json();
+                console.log('AI Response:', data);
+                
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error('Invalid response structure from AI');
+                }
+                
+                const aiText = data.candidates[0].content.parts[0].text;
+                console.log('AI Text:', aiText);
+                
+                // Parse the JSON response
+                let nutritionData;
+                try {
+                    // Remove markdown code blocks if present
+                    const cleanText = aiText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    nutritionData = JSON.parse(cleanText);
+                } catch (parseError) {
+                    console.error('Error parsing AI response:', parseError);
+                    console.error('Raw AI text:', aiText);
+                    throw new Error('Could not parse AI response');
+                }
+
+                // Display AI result
+                displayAIResult(nutritionData);
+
+            } catch (error) {
+                console.error('Error with AI lookup:', error);
+                resultsDiv.innerHTML = `<div class="error-message">⚠️ Error with AI lookup: ${error.message}<br>Please check your API key or try manual entry.</div>`;
+            } finally {
+                aiSubmitBtn.disabled = false;
+                aiSubmitBtn.textContent = 'Get AI Analysis';
+            }
+        }
+
+        // Store the AI result temporarily
+        let tempAIResult = null;
+
+        // Display AI-generated nutrition result
+        function displayAIResult(data) {
+            const resultsDiv = document.getElementById('searchResults');
+            tempAIResult = data; // Store for later use
+            
+            resultsDiv.innerHTML = `
+                <div class="ai-result">
+                    <h4>🤖 AI-Generated Result</h4>
+                    <p><strong>Food:</strong> ${data.name}</p>
+                    <p><strong>Calories:</strong> ${Math.round(data.calories)} cal</p>
+                    <p><strong>Carbs:</strong> ${data.carbs}g | <strong>Protein:</strong> ${data.protein}g | <strong>Fats:</strong> ${data.fats}g</p>
+                    <p><strong>Confidence:</strong> ${data.confidence}</p>
+                    ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button class="btn btn-success" onclick="saveAIResultToDatabase()">
+                            💾 Save to Database
+                        </button>
+                        <button class="btn btn-primary" onclick="addAIResultToLog()">
+                            ✅ Add to Today's Log
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Save AI result to database
+        function saveAIResultToDatabase() {
+            if (!tempAIResult) {
+                alert('No AI result available');
+                return;
+            }
+            
+            const data = tempAIResult;
+            const savedFood = {
+                id: Date.now(),
+                name: data.name,
+                carbs: data.carbs || 0,
+                protein: data.protein || 0,
+                fats: data.fats || 0,
+                calories: data.calories || 0
+            };
+
+            savedFoods.push(savedFood);
+            saveToLocalStorage();
+            renderSavedFoods();
+            alert('Food saved to database!');
+        }
+
+        // Add AI result directly to today's log
+        function addAIResultToLog() {
+            if (!tempAIResult) {
+                alert('No AI result available');
+                return;
+            }
+            
+            const data = tempAIResult;
+            const foodEntry = {
+                id: Date.now(),
+                name: data.name,
+                carbs: data.carbs || 0,
+                protein: data.protein || 0,
+                fats: data.fats || 0,
+                calories: data.calories || 0,
+                timestamp: new Date().toISOString()
+            };
+
+            dailyLog.push(foodEntry);
+            saveToLocalStorage();
+            updateDailySummary();
+            renderFoodLog();
+            
+            // Clear the AI input and results
+            document.getElementById('aiSearchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('aiSearchBtn').style.display = 'none';
+            
+            alert('Food added to today\'s log!');
+        }
+
+        // Display search results
+        function displaySearchResults(foods) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            resultsDiv.innerHTML = '<div class="search-results">' + 
+                foods.map(food => {
+                    const brandName = food.brandName ? ` (${food.brandName})` : '';
+                    return `
+                        <div class="search-result-item" onclick="selectFood(${food.fdcId})">
+                            <div class="search-result-name">${food.description}${brandName}</div>
+                            <div class="search-result-info">Click to view details</div>
+                        </div>
+                    `;
+                }).join('') +
+            '</div>';
+        }
+
+        // Select a food and get detailed nutrition info
+        async function selectFood(fdcId) {
+            const detailsDiv = document.getElementById('selectedFoodDetails');
+            
+            try {
+                const response = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=uAToHmb8JVojh6g2yHsEBBDk42hsAmox7D7xhE9d`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch food details');
+                }
+
+                const food = await response.json();
+                
+                // Extract nutrients
+                const nutrients = {};
+                if (food.foodNutrients) {
+                    food.foodNutrients.forEach(nutrient => {
+                        const name = nutrient.nutrient?.name?.toLowerCase() || '';
+                        if (name.includes('protein')) {
+                            nutrients.protein = nutrient.amount || 0;
+                        } else if (name.includes('carbohydrate')) {
+                            nutrients.carbs = nutrient.amount || 0;
+                        } else if (name.includes('total lipid') || name.includes('fat, total')) {
+                            nutrients.fats = nutrient.amount || 0;
+                        } else if (name.includes('energy') && nutrient.nutrient?.unitName === 'KCAL') {
+                            nutrients.calories = nutrient.amount || 0;
+                        }
+                    });
+                }
+
+                // If calories not found, calculate from macros
+                if (!nutrients.calories) {
+                    nutrients.calories = calculateCalories(
+                        nutrients.carbs || 0,
+                        nutrients.protein || 0,
+                        nutrients.fats || 0
+                    );
+                }
+
+                selectedFood = {
+                    name: food.description,
+                    carbs: nutrients.carbs || 0,
+                    protein: nutrients.protein || 0,
+                    fats: nutrients.fats || 0,
+                    calories: nutrients.calories || 0
+                };
+
+                // Display selected food details
+                document.getElementById('selectedFoodName').textContent = selectedFood.name;
+                document.getElementById('servingSize').value = 100;
+                updateServingSizeDisplay();
+                detailsDiv.style.display = 'block';
+
+                // Scroll to details
+                detailsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } catch (error) {
+                console.error('Error fetching food details:', error);
+                alert('Error loading food details. Please try again.');
+            }
+        }
+
+        // Update serving size display
+        function updateServingSizeDisplay() {
+            const servingSize = parseFloat(document.getElementById('servingSize').value) || 100;
+            const multiplier = servingSize / 100;
+
+            document.getElementById('servingSizeDisplay').textContent = servingSize;
+            
+            if (selectedFood) {
+                document.getElementById('lookupCalories').textContent = Math.round(selectedFood.calories * multiplier);
+                document.getElementById('lookupCarbs').textContent = (selectedFood.carbs * multiplier).toFixed(1);
+                document.getElementById('lookupProtein').textContent = (selectedFood.protein * multiplier).toFixed(1);
+                document.getElementById('lookupFats').textContent = (selectedFood.fats * multiplier).toFixed(1);
+            }
+        }
+
+        // Add looked up food to daily log
+        function addLookedUpFood() {
+            if (!selectedFood) {
+                alert('Please select a food first');
+                return;
+            }
+
+            const servingSize = parseFloat(document.getElementById('servingSize').value) || 100;
+            const multiplier = servingSize / 100;
+
+            const foodEntry = {
+                id: Date.now(),
+                name: `${selectedFood.name} (${servingSize}g)`,
+                carbs: selectedFood.carbs * multiplier,
+                protein: selectedFood.protein * multiplier,
+                fats: selectedFood.fats * multiplier,
+                calories: selectedFood.calories * multiplier,
+                timestamp: new Date().toISOString()
+            };
+
+            dailyLog.push(foodEntry);
+            saveToLocalStorage();
+            updateDailySummary();
+            renderFoodLog();
+            
+            alert('Food added to today\'s log!');
+        }
+
+        // Save looked up food to database
+        function saveLookedUpFood() {
+            if (!selectedFood) {
+                alert('Please select a food first');
+                return;
+            }
+
+            const servingSize = parseFloat(document.getElementById('servingSize').value) || 100;
+            const multiplier = servingSize / 100;
+
+            const savedFood = {
+                id: Date.now(),
+                name: `${selectedFood.name} (${servingSize}g)`,
+                carbs: selectedFood.carbs * multiplier,
+                protein: selectedFood.protein * multiplier,
+                fats: selectedFood.fats * multiplier,
+                calories: selectedFood.calories * multiplier
+            };
+
+            savedFoods.push(savedFood);
+            saveToLocalStorage();
+            renderSavedFoods();
+            alert('Food saved to database!');
+        }
+
+        // Calculate calories for a food item
+        function calculateCalories(carbs, protein, fats) {
+            return (carbs * CARB_CALORIES_PER_GRAM) + 
+                   (protein * PROTEIN_CALORIES_PER_GRAM) + 
+                   (fats * FAT_CALORIES_PER_GRAM);
+        }
+
+        // Add food to daily log (manual entry)
+        function addFoodToLog() {
+            const foodName = document.getElementById('foodName').value.trim();
+            const carbs = parseFloat(document.getElementById('carbs').value) || 0;
+            const protein = parseFloat(document.getElementById('protein').value) || 0;
+            const fats = parseFloat(document.getElementById('fats').value) || 0;
+
+            if (!foodName) {
+                alert('Please enter a food name');
+                return;
+            }
+
+            const calories = calculateCalories(carbs, protein, fats);
+
+            const foodEntry = {
+                id: Date.now(),
+                name: foodName,
+                carbs: carbs,
+                protein: protein,
+                fats: fats,
+                calories: calories,
+                timestamp: new Date().toISOString()
+            };
+
+            dailyLog.push(foodEntry);
+            saveToLocalStorage();
+            updateDailySummary();
+            renderFoodLog();
+            clearManualInputs();
+        }
+
+        // Save food to database (manual entry)
+        function saveFoodToDatabase() {
+            const foodName = document.getElementById('foodName').value.trim();
+            const carbs = parseFloat(document.getElementById('carbs').value) || 0;
+            const protein = parseFloat(document.getElementById('protein').value) || 0;
+            const fats = parseFloat(document.getElementById('fats').value) || 0;
+
+            if (!foodName) {
+                alert('Please enter a food name');
+                return;
+            }
+
+            // Check if food already exists
+            const existingFood = savedFoods.find(f => f.name.toLowerCase() === foodName.toLowerCase());
+            if (existingFood) {
+                if (!confirm('This food already exists. Do you want to update it?')) {
+                    return;
+                }
+                existingFood.carbs = carbs;
+                existingFood.protein = protein;
+                existingFood.fats = fats;
+                existingFood.calories = calculateCalories(carbs, protein, fats);
+            } else {
+                const savedFood = {
+                    id: Date.now(),
+                    name: foodName,
+                    carbs: carbs,
+                    protein: protein,
+                    fats: fats,
+                    calories: calculateCalories(carbs, protein, fats)
+                };
+                savedFoods.push(savedFood);
+            }
+
+            saveToLocalStorage();
+            renderSavedFoods();
+            alert('Food saved to database!');
+        }
+
+        // Load saved food into manual entry form
+        function loadSavedFood(foodId) {
+            const food = savedFoods.find(f => f.id === foodId);
+            if (food) {
+                document.getElementById('foodName').value = food.name;
+                document.getElementById('carbs').value = food.carbs;
+                document.getElementById('protein').value = food.protein;
+                document.getElementById('fats').value = food.fats;
+                switchTab('manual');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.querySelectorAll('.tab')[0].classList.remove('active');
+                document.querySelectorAll('.tab')[2].classList.remove('active');
+            }
+        }
+
+        // Delete saved food
+        function deleteSavedFood(foodId) {
+            if (confirm('Are you sure you want to delete this saved food?')) {
+                savedFoods = savedFoods.filter(f => f.id !== foodId);
+                saveToLocalStorage();
+                renderSavedFoods();
+            }
+        }
+
+        // Delete food from daily log
+        function deleteFoodEntry(entryId) {
+            dailyLog = dailyLog.filter(entry => entry.id !== entryId);
+            saveToLocalStorage();
+            updateDailySummary();
+            renderFoodLog();
+        }
+
+        // Update daily summary
+        function updateDailySummary() {
+            const totals = dailyLog.reduce((acc, entry) => {
+                acc.calories += entry.calories;
+                acc.carbs += entry.carbs;
+                acc.protein += entry.protein;
+                acc.fats += entry.fats;
+                return acc;
+            }, { calories: 0, carbs: 0, protein: 0, fats: 0 });
+
+            document.getElementById('totalCalories').textContent = Math.round(totals.calories);
+            document.getElementById('totalCarbs').textContent = Math.round(totals.carbs) + 'g';
+            document.getElementById('totalProtein').textContent = Math.round(totals.protein) + 'g';
+            document.getElementById('totalFats').textContent = Math.round(totals.fats) + 'g';
+        }
+
+        // Render food log
+        function renderFoodLog() {
+            const logContainer = document.getElementById('foodLog');
+            
+            if (dailyLog.length === 0) {
+                logContainer.innerHTML = '<div class="empty-state">No foods logged today. Start adding foods!</div>';
+                return;
+            }
+
+            logContainer.innerHTML = dailyLog.map(entry => `
+                <div class="food-entry">
+                    <div class="food-info">
+                        <div class="food-name">${entry.name}</div>
+                        <div class="food-macros">
+                            C: ${Math.round(entry.carbs)}g | P: ${Math.round(entry.protein)}g | F: ${Math.round(entry.fats)}g
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div class="food-calories">${Math.round(entry.calories)} cal</div>
+                        <button class="btn btn-danger" onclick="deleteFoodEntry(${entry.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render saved foods
+        function renderSavedFoods() {
+            const savedContainer = document.getElementById('savedFoodsList');
+            
+            if (savedFoods.length === 0) {
+                savedContainer.innerHTML = '<div class="empty-state">No saved foods yet. Add foods and save them to your database!</div>';
+                return;
+            }
+
+            savedContainer.innerHTML = savedFoods.map(food => `
+                <div class="saved-food-item" onclick="loadSavedFood(${food.id})">
+                    <div>
+                        <div class="food-name">${food.name}</div>
+                        <div class="food-macros">
+                            C: ${Math.round(food.carbs)}g | P: ${Math.round(food.protein)}g | F: ${Math.round(food.fats)}g | ${Math.round(food.calories)} cal
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="event.stopPropagation(); deleteSavedFood(${food.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Clear manual input fields
+        function clearManualInputs() {
+            document.getElementById('foodName').value = '';
+            document.getElementById('carbs').value = '0';
+            document.getElementById('protein').value = '0';
+            document.getElementById('fats').value = '0';
+        }
+
+        // Reset day
+        function resetDay() {
+            if (confirm('Are you sure you want to reset today\'s log? This cannot be undone.')) {
+                dailyLog = [];
+                saveToLocalStorage();
+                updateDailySummary();
+                renderFoodLog();
+            }
+        }
+
+        // Local storage functions
+        function saveToLocalStorage() {
+            const today = getTodayDateString();
+            
+            // Save current daily log to history if it has entries
+            if (dailyLog.length > 0) {
+                foodHistory[today] = dailyLog;
+                localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
+            }
+            
+            localStorage.setItem('dailyLog', JSON.stringify(dailyLog));
+            localStorage.setItem('savedFoods', JSON.stringify(savedFoods));
+            localStorage.setItem('lastDate', new Date().toDateString());
+        }
+
+        function loadFromLocalStorage() {
+            const lastDate = localStorage.getItem('lastDate');
+            const today = new Date().toDateString();
+
+            // Load food history
+            const storedHistory = localStorage.getItem('foodHistory');
+            foodHistory = storedHistory ? JSON.parse(storedHistory) : {};
+
+            // Reset daily log if it's a new day
+            if (lastDate !== today) {
+                // Save yesterday's log to history before resetting
+                const storedLog = localStorage.getItem('dailyLog');
+                const yesterdayLog = storedLog ? JSON.parse(storedLog) : [];
+                if (yesterdayLog.length > 0) {
+                    const yesterdayDate = new Date(lastDate);
+                    const yesterdayDateString = formatDateString(yesterdayDate);
+                    foodHistory[yesterdayDateString] = yesterdayLog;
+                    localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
+                }
+                
+                dailyLog = [];
+                localStorage.setItem('dailyLog', JSON.stringify(dailyLog));
+                localStorage.setItem('lastDate', today);
+            } else {
+                const storedLog = localStorage.getItem('dailyLog');
+                dailyLog = storedLog ? JSON.parse(storedLog) : [];
+            }
+
+            const storedFoods = localStorage.getItem('savedFoods');
+            savedFoods = storedFoods ? JSON.parse(storedFoods) : [];
+        }
+
+        // History functions
+        function getTodayDateString() {
+            const today = new Date();
+            return formatDateString(today);
+        }
+
+        function formatDateString(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatDisplayDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function loadHistoryByDate() {
+            const datePicker = document.getElementById('historyDatePicker');
+            const selectedDate = datePicker.value;
+            
+            if (!selectedDate) {
+                alert('Please select a date');
+                return;
+            }
+
+            currentHistoryDate = selectedDate;
+            displayHistory(selectedDate);
+        }
+
+        function navigateHistory(direction) {
+            if (!currentHistoryDate) {
+                // Start with today if no date selected
+                currentHistoryDate = getTodayDateString();
+            }
+
+            const currentDate = new Date(currentHistoryDate + 'T00:00:00');
+            currentDate.setDate(currentDate.getDate() + direction);
+            currentHistoryDate = formatDateString(currentDate);
+            
+            // Update date picker
+            document.getElementById('historyDatePicker').value = currentHistoryDate;
+            
+            displayHistory(currentHistoryDate);
+        }
+
+        function displayHistory(dateString) {
+            const historyContent = document.getElementById('historyContent');
+            const historyDateDisplay = document.getElementById('historyDate');
+            const todayString = getTodayDateString();
+            
+            // Update date display
+            historyDateDisplay.textContent = formatDisplayDate(dateString);
+            
+            // Disable next button if viewing today or future
+            const nextBtn = document.getElementById('nextDayBtn');
+            nextBtn.disabled = dateString >= todayString;
+            
+            // Get data for the selected date
+            let dayData = [];
+            if (dateString === todayString) {
+                dayData = dailyLog;
+            } else if (foodHistory[dateString]) {
+                dayData = foodHistory[dateString];
+            }
+            
+            if (dayData.length === 0) {
+                historyContent.innerHTML = `
+                    <div class="history-empty">
+                        No food entries for ${formatDisplayDate(dateString)}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calculate totals
+            const totals = dayData.reduce((acc, entry) => {
+                acc.calories += entry.calories;
+                acc.carbs += entry.carbs;
+                acc.protein += entry.protein;
+                acc.fats += entry.fats;
+                return acc;
+            }, { calories: 0, carbs: 0, protein: 0, fats: 0 });
+            
+            // Display summary and foods
+            historyContent.innerHTML = `
+                <div class="history-summary">
+                    <h3>Daily Totals</h3>
+                    <div class="history-stats">
+                        <div class="history-stat">
+                            <div class="history-stat-label">Calories</div>
+                            <div class="history-stat-value">${Math.round(totals.calories)}</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-label">Carbs</div>
+                            <div class="history-stat-value">${Math.round(totals.carbs)}g</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-label">Protein</div>
+                            <div class="history-stat-value">${Math.round(totals.protein)}g</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-label">Fats</div>
+                            <div class="history-stat-value">${Math.round(totals.fats)}g</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 15px; color: #333;">Food Entries</h3>
+                <div class="history-foods">
+                    ${dayData.map(entry => `
+                        <div class="food-entry">
+                            <div class="food-info">
+                                <div class="food-name">${entry.name}</div>
+                                <div class="food-macros">
+                                    C: ${Math.round(entry.carbs)}g | P: ${Math.round(entry.protein)}g | F: ${Math.round(entry.fats)}g
+                                </div>
+                            </div>
+                            <div class="food-calories">${Math.round(entry.calories)} cal</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Initialize history on page load
+        function initHistory() {
+            // Set date picker to today
+            const today = getTodayDateString();
+            document.getElementById('historyDatePicker').value = today;
+            document.getElementById('historyDatePicker').max = today;
+            
+            // Load today's data by default
+            currentHistoryDate = today;
+            displayHistory(today);
+        }
+
+        // Allow Enter key to search
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('searchFood').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    searchFood();
+                }
+            });
+        });
+
+        // Initialize on page load
+        window.onload = function() {
+            init();
+            initHistory();
+        };
+    </script>
+</body>
+</html>
